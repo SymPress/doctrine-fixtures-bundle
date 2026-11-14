@@ -18,6 +18,7 @@
         "sympress/kernel": "^1.1.14"
     },
     "require-dev": {
+        "phpstan/phpstan-doctrine": "^2.0",
         "sympress/qa": "^0.1.2"
     },
     "autoload": {
