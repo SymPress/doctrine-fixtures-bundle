@@ -1,0 +1,5 @@
+{
+    "name": "sympress/doctrine-fixtures-integration-fixture",
+    "type": "project",
+    "require": {"sympress/doctrine-fixtures-bundle": "^1.0"}
+}
