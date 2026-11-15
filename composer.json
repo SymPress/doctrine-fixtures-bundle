@@ -13,6 +13,7 @@
     "require": {
         "php": "^8.5",
         "doctrine/data-fixtures": "^2.2",
+        "doctrine/dbal": "^4.5",
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
         "sympress/doctrine-bundle": "^1.0.3",
         "sympress/kernel": "^1.1.14"
@@ -35,7 +36,9 @@
         "kernel": {
             "bundle": "SymPress\\DoctrineFixturesBundle\\DoctrineFixturesBundle",
             "entry": "doctrine-fixtures-bundle",
-            "requires": ["sympress/doctrine-bundle"]
+            "requires": [
+                "sympress/doctrine-bundle"
+            ]
         }
     },
     "scripts": {

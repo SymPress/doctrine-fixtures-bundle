@@ -8,6 +8,7 @@ use Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle as NativeFixturesBundl
 use PHPUnit\Framework\TestCase;
 use SymPress\DoctrineBundle\DoctrineBundle;
 use SymPress\DoctrineFixturesBundle\DependencyInjection\ProductionGuardPass;
+use SymPress\DoctrineFixturesBundle\DependencyInjection\SchemaFilterPass;
 use SymPress\DoctrineFixturesBundle\DoctrineFixturesBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Kernel\RequiredBundle;
@@ -30,8 +31,9 @@ final class BundleContractTest extends TestCase
         $native->build($expected);
         $adapter->build($actual);
         $passes = $this->passes($actual);
-        self::assertContains(ProductionGuardPass::class, $passes);
-        self::assertSame($this->passes($expected), array_values(array_diff($passes, [ProductionGuardPass::class])));
+        $own = [ProductionGuardPass::class, SchemaFilterPass::class];
+        self::assertEqualsCanonicalizing($own, array_values(array_intersect($passes, $own)));
+        self::assertSame($this->passes($expected), array_values(array_diff($passes, $own)));
         self::assertSame($native->getPath(), $adapter->getPath());
         self::assertSame($native->getNamespace(), $adapter->getNamespace());
         self::assertSame($native->getName(), $adapter->getName());
