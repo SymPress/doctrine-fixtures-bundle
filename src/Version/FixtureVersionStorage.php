@@ -64,12 +64,17 @@ final readonly class FixtureVersionStorage
         ];
         $types = ['batch' => Types::INTEGER, 'executed_at' => Types::DATETIME_IMMUTABLE];
 
+        $this->connection->insert(self::TABLE, $row, $types);
+    }
+
+    /** Call before opening a transaction: DDL commits implicitly on MySQL. */
+    public function ensureTable(): void
+    {
         try {
-            $this->connection->insert(self::TABLE, $row, $types);
+            $this->connection->fetchOne('SELECT COUNT(*) FROM ' . self::TABLE);
         } catch (TableNotFoundException) {
-            // The schema asset filter hides this table from introspection, so create it on first write.
+            // The schema asset filter hides this table from introspection, so probe it with a query.
             $this->connection->createSchemaManager()->createTable($this->table());
-            $this->connection->insert(self::TABLE, $row, $types);
         }
     }
 
