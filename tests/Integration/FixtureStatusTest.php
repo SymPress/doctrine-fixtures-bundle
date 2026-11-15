@@ -21,6 +21,7 @@ final class FixtureStatusTest extends KernelTestCase
         self::assertMatchesRegularExpression('~BundleFixtures\s+pending~', $display);
 
         $storage = new FixtureVersionStorage($this->manager()->getConnection());
+        $storage->ensureTable();
         $references = ['product.base' => ['class' => Product::class, 'identity' => ['id' => 1]]];
         $storage->record(ProductFixtures::class, 1, $references);
         $storage->record('App\\DataFixtures\\RemovedFixtures', 1, []);
@@ -41,7 +42,9 @@ final class FixtureStatusTest extends KernelTestCase
     {
         $this->boot();
         $manager = $this->manager();
-        (new FixtureVersionStorage($manager->getConnection()))->record(ProductFixtures::class, 1, []);
+        $storage = new FixtureVersionStorage($manager->getConnection());
+        $storage->ensureTable();
+        $storage->record(ProductFixtures::class, 1, []);
 
         $sql = (new SchemaTool($manager))->getUpdateSchemaSql($manager->getMetadataFactory()->getAllMetadata());
         self::assertStringNotContainsString(FixtureVersionStorage::TABLE, implode("\n", $sql));
@@ -52,6 +55,8 @@ final class FixtureStatusTest extends KernelTestCase
         $this->boot();
         $storage = new FixtureVersionStorage($this->manager()->getConnection());
         self::assertSame([], $storage->executed());
+        $storage->ensureTable();
+        $storage->ensureTable();
         $storage->record(ProductFixtures::class, 1, []);
         $storage->remove(ProductFixtures::class);
 
