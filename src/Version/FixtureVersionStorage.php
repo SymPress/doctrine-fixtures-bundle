@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SymPress\DoctrineFixturesBundle\Version;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
@@ -23,14 +22,14 @@ final readonly class FixtureVersionStorage
     /** @return array<string, ExecutedFixture> Executed fixtures by class, oldest first. */
     public function executed(): array
     {
-        try {
-            $rows = $this->connection->fetchAllAssociative(
-                'SELECT fixture, batch, executed_at, fixture_references FROM ' . self::TABLE
-                . ' ORDER BY batch, executed_at, fixture',
-            );
-        } catch (TableNotFoundException) {
+        if (!$this->tableExists()) {
             return [];
         }
+
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT fixture, batch, executed_at, fixture_references FROM ' . self::TABLE
+            . ' ORDER BY batch, executed_at, fixture',
+        );
 
         $executed = [];
         foreach ($rows as $row) {
@@ -70,17 +69,34 @@ final readonly class FixtureVersionStorage
     /** Call before opening a transaction: DDL commits implicitly on MySQL. */
     public function ensureTable(): void
     {
-        try {
-            $this->connection->fetchOne('SELECT COUNT(*) FROM ' . self::TABLE);
-        } catch (TableNotFoundException) {
-            // The schema asset filter hides this table from introspection, so probe it with a query.
-            $this->connection->createSchemaManager()->createTable($this->table());
+        if ($this->tableExists()) {
+            return;
         }
+
+        $this->connection->createSchemaManager()->createTable($this->table());
     }
 
     public function remove(string $fixture): void
     {
         $this->connection->delete(self::TABLE, ['fixture' => $fixture]);
+    }
+
+    /**
+     * Checks introspection instead of catching TableNotFoundException: mysqli under WordPress runs with
+     * MYSQLI_REPORT_OFF, where DBAL cannot convert a missing table into an exception.
+     */
+    private function tableExists(): bool
+    {
+        $configuration = $this->connection->getConfiguration();
+        $filter = $configuration->getSchemaAssetsFilter();
+        // This bundle's own schema filter hides the table; look past every filter for this one check.
+        $configuration->setSchemaAssetsFilter(static fn (): bool => true);
+
+        try {
+            return $this->connection->createSchemaManager()->tableExists(self::TABLE);
+        } finally {
+            $configuration->setSchemaAssetsFilter($filter);
+        }
     }
 
     private function table(): Table
