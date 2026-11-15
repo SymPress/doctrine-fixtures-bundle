@@ -7,8 +7,6 @@ namespace SymPress\DoctrineFixturesBundle\Command;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\ReferenceRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use SymPress\DoctrineFixturesBundle\Version\ExecutedFixture;
 use SymPress\DoctrineFixturesBundle\Version\FixtureVersionStorage;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -55,29 +53,6 @@ final class UpCommand extends AbstractFixturesCommand
         $io->success(sprintf('Executed %d fixture(s) in batch %d.', count($pending), $batch));
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Upstream only resolves names it holds an object for, so restore lazy proxies (no query until used).
-     *
-     * @param array<string, ExecutedFixture> $executed
-     */
-    private function restoreReferences(
-        ReferenceRepository $references,
-        EntityManagerInterface $manager,
-        array $executed,
-    ): void {
-
-        foreach ($executed as $run) {
-            foreach ($run->getReferences() as $name => $reference) {
-                $proxy = $manager->getReference($reference['class'], $reference['identity']);
-                if ($proxy === null) {
-                    continue;
-                }
-
-                $references->setReference($name, $proxy);
-            }
-        }
     }
 
     /**
