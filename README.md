@@ -62,11 +62,64 @@ loading. Tables that Doctrine does not map, such as WordPress core and plugin
 tables, are not touched. Use `--purge-exclusions` to keep individual mapped
 tables.
 
+## Migration-style fixtures: up, down and status
+
+Next to the upstream `load` (purge and reload everything), the bundle tracks
+executed fixtures in `doctrine_fixture_versions`, like Doctrine Migrations
+tracks migrations:
+
+```sh
+wp console doctrine:fixtures:status            # executed, pending, unavailable
+wp console doctrine:fixtures:up                # run pending fixtures, no purge
+wp console doctrine:fixtures:down              # revert the last up batch
+wp console doctrine:fixtures:down 'App\DataFixtures\ProductFixtures'
+wp console doctrine:fixtures:down --all
+```
+
+- `up` runs only fixtures that were not executed yet, in dependency order. All
+  fixtures of one run form a batch. Each fixture runs in its own transaction
+  together with its record, so a failure leaves it pending.
+- References from earlier batches are restored, so a new fixture can use
+  `getReference()` on objects created by an already executed fixture.
+- `down` reverts the last batch, the given fixtures or `--all`. Executed fixtures
+  that depend on a reverted fixture are reverted first. It asks for confirmation;
+  `--no-interaction` proceeds like `doctrine:migrations:migrate -n`.
+- All commands accept `--group` and `--em`.
+
+A fixture becomes revertible by implementing `RevertibleFixtureInterface`:
+
+```php
+use SymPress\DoctrineFixturesBundle\RevertibleFixtureInterface;
+
+final class ProductFixtures extends Fixture implements RevertibleFixtureInterface
+{
+    public function load(ObjectManager $manager): void
+    {
+        $product = new Product('Demo product');
+        $manager->persist($product);
+        $manager->flush();
+        $this->addReference('product.demo', $product);
+    }
+
+    public function down(ObjectManager $manager): void
+    {
+        $manager->remove($this->getReference('product.demo', Product::class));
+    }
+}
+```
+
+`down` refuses to run, and reverts nothing, if the plan contains a fixture
+without `down()` or one whose class no longer exists. The tracking table is
+created on first use and hidden from schema diffs on every connection, so
+`doctrine:migrations:diff` never proposes dropping it. `load` does not use the
+tracking table; use `down --all` followed by `up` for a migration-style rebuild.
+
 ## Production safety
 
-`doctrine:fixtures:load` is not registered when the kernel environment is `prod`
-or `production`. Keep the package in `require-dev` so production builds
-(`composer install --no-dev`) do not install it at all.
+`doctrine:fixtures:load`, `up` and `down` are not registered when the kernel
+environment is `prod` or `production`; `status` stays available. Keep the
+package in `require-dev` so production builds (`composer install --no-dev`) do
+not install it at all.
 
 ## Development
 
