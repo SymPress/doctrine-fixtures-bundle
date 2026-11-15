@@ -4,45 +4,20 @@ declare(strict_types=1);
 
 namespace SymPress\DoctrineFixturesBundle\Command;
 
-use Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use SymPress\DoctrineFixturesBundle\Version\ExecutedFixture;
 use SymPress\DoctrineFixturesBundle\Version\FixtureVersionStorage;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: 'doctrine:fixtures:status', description: 'Show which fixtures are executed and which are pending')]
-final class StatusCommand extends Command
+final class StatusCommand extends AbstractFixturesCommand
 {
-    public function __construct(
-        private readonly SymfonyFixturesLoader $loader,
-        private readonly ManagerRegistry $registry,
-    ) {
-
-        parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this
-            ->addOption(
-                'group',
-                null,
-                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
-                'Only show fixtures of these groups.',
-            )
-            ->addOption('em', null, InputOption::VALUE_REQUIRED, 'The entity manager to use.');
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $executed = $this->storage($input->getOption('em'))->executed();
+        $executed = (new FixtureVersionStorage($this->manager($input)->getConnection()))->executed();
         $rows = [];
 
         foreach ($this->loader->getFixtures($this->groups($input)) as $fixture) {
@@ -73,23 +48,5 @@ final class StatusCommand extends Command
     private function row(ExecutedFixture $run, string $status): array
     {
         return [$run->getFixture(), $status, (string) $run->getBatch(), $run->getExecutedAt()->format('Y-m-d H:i:s')];
-    }
-
-    /** @return list<string> */
-    private function groups(InputInterface $input): array
-    {
-        $groups = $input->getOption('group');
-
-        return is_array($groups) ? array_values(array_filter($groups, 'is_string')) : [];
-    }
-
-    private function storage(mixed $managerName): FixtureVersionStorage
-    {
-        $manager = $this->registry->getManager(is_string($managerName) ? $managerName : null);
-        if (!$manager instanceof EntityManagerInterface) {
-            throw new \InvalidArgumentException('The fixture version storage requires a Doctrine ORM entity manager.');
-        }
-
-        return new FixtureVersionStorage($manager->getConnection());
     }
 }
