@@ -7,6 +7,7 @@ namespace SymPress\DoctrineFixturesBundle;
 use Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle as UpstreamFixturesBundle;
 use SymPress\DoctrineBundle\DoctrineBundle;
 use SymPress\DoctrineBundle\NativeBundleAdapter;
+use SymPress\DoctrineFixturesBundle\Command\DownCommand;
 use SymPress\DoctrineFixturesBundle\Command\StatusCommand;
 use SymPress\DoctrineFixturesBundle\Command\UpCommand;
 use SymPress\DoctrineFixturesBundle\DependencyInjection\ProductionGuardPass;
@@ -29,7 +30,8 @@ final class DoctrineFixturesBundle extends NativeBundleAdapter
     {
         parent::build($container);
         $container->register(SchemaFilterPass::FILTER_ID, FixtureVersionsSchemaFilter::class);
-        foreach (['status' => StatusCommand::class, 'up' => UpCommand::class] as $name => $class) {
+        $commands = ['status' => StatusCommand::class, 'up' => UpCommand::class, 'down' => DownCommand::class];
+        foreach ($commands as $name => $class) {
             $container->register('sympress.doctrine_fixtures.' . $name . '_command', $class)
                 ->setArguments([new Reference('doctrine.fixtures.loader'), new Reference('doctrine')])
                 ->addTag('console.command', ['command' => 'doctrine:fixtures:' . $name]);

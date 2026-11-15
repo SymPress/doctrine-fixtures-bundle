@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace SymPress\DoctrineFixturesBundle\Command;
 
 use Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader;
+use Doctrine\Common\DataFixtures\ReferenceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use SymPress\DoctrineFixturesBundle\Version\ExecutedFixture;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,6 +42,29 @@ abstract class AbstractFixturesCommand extends Command
         $groups = $input->getOption('group');
 
         return is_array($groups) ? array_values(array_filter($groups, 'is_string')) : [];
+    }
+
+    /**
+     * Upstream only resolves names it holds an object for, so restore lazy proxies (no query until used).
+     *
+     * @param array<string, ExecutedFixture> $executed
+     */
+    protected function restoreReferences(
+        ReferenceRepository $references,
+        EntityManagerInterface $manager,
+        array $executed,
+    ): void {
+
+        foreach ($executed as $run) {
+            foreach ($run->getReferences() as $name => $reference) {
+                $proxy = $manager->getReference($reference['class'], $reference['identity']);
+                if ($proxy === null) {
+                    continue;
+                }
+
+                $references->setReference($name, $proxy);
+            }
+        }
     }
 
     protected function manager(InputInterface $input): EntityManagerInterface

@@ -10,7 +10,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 /** Keeps data-changing fixture commands out of production containers. */
 final class ProductionGuardPass implements CompilerPassInterface
 {
-    public const array COMMAND_IDS = ['doctrine.fixtures_load_command', 'sympress.doctrine_fixtures.up_command'];
+    public const array COMMAND_IDS = [
+        'doctrine.fixtures_load_command',
+        'sympress.doctrine_fixtures.up_command',
+        'sympress.doctrine_fixtures.down_command',
+    ];
 
     private const array PRODUCTION_ENVIRONMENTS = ['prod', 'production'];
 
