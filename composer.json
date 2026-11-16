@@ -15,7 +15,7 @@
         "doctrine/data-fixtures": "^2.2",
         "doctrine/dbal": "^4.5",
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
-        "sympress/doctrine-bundle": "^1.0.3",
+        "sympress/doctrine-bundle": "^1.0.5",
         "sympress/kernel": "^1.1.14"
     },
     "require-dev": {
