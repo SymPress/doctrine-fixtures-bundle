@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+- Requires `sympress/doctrine-bundle` 1.0.5: purges never touch tables with the
+  WordPress prefix. Outside WordPress, set `DB_TABLE_PREFIX` before running
+  fixture commands.
+
 ## 1.1.0
 
 - Migration-style fixtures: `doctrine:fixtures:status`, `doctrine:fixtures:up`
