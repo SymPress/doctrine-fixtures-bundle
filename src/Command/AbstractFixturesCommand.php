@@ -7,11 +7,14 @@ namespace SymPress\DoctrineFixturesBundle\Command;
 use Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader;
 use Doctrine\Common\DataFixtures\ReferenceRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ManagerException;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\Mapping\MappingException;
 use SymPress\DoctrineFixturesBundle\Version\ExecutedFixture;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /** Shared --group and --em handling of the migration-style fixture commands. */
 abstract class AbstractFixturesCommand extends Command
@@ -46,6 +49,7 @@ abstract class AbstractFixturesCommand extends Command
 
     /**
      * Upstream only resolves names it holds an object for, so restore lazy proxies (no query until used).
+     * A stored reference to a removed entity class or without identity is skipped, so it cannot block every run.
      *
      * @param array<string, ExecutedFixture> $executed
      */
@@ -53,11 +57,19 @@ abstract class AbstractFixturesCommand extends Command
         ReferenceRepository $references,
         EntityManagerInterface $manager,
         array $executed,
+        SymfonyStyle $io,
     ): void {
 
+        $stale = [];
         foreach ($executed as $run) {
             foreach ($run->getReferences() as $name => $reference) {
-                $proxy = $manager->getReference($reference['class'], $reference['identity']);
+                try {
+                    $proxy = $manager->getReference($reference['class'], $reference['identity']);
+                } catch (MappingException | ManagerException) {
+                    $stale[] = $name;
+                    continue;
+                }
+
                 if ($proxy === null) {
                     continue;
                 }
@@ -65,6 +77,15 @@ abstract class AbstractFixturesCommand extends Command
                 $references->setReference($name, $proxy);
             }
         }
+
+        if ($stale === []) {
+            return;
+        }
+
+        $io->warning(sprintf(
+            'Skipped stale references: %s. Their entity class is no longer mapped or their identity is invalid.',
+            implode(', ', $stale),
+        ));
     }
 
     protected function manager(InputInterface $input): EntityManagerInterface

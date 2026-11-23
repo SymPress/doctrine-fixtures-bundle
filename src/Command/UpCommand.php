@@ -37,7 +37,7 @@ final class UpCommand extends AbstractFixturesCommand
         $executor = new ORMExecutor($manager);
         $references = new ReferenceRepository($manager);
         $executor->setReferenceRepository($references);
-        $this->restoreReferences($references, $manager, $executed);
+        $this->restoreReferences($references, $manager, $executed, $io);
         $batch = $storage->nextBatch();
 
         foreach ($pending as $fixture) {

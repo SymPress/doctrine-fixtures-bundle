@@ -75,7 +75,7 @@ final class DownCommand extends AbstractFixturesCommand
         }
 
         $references = new ReferenceRepository($manager);
-        $this->restoreReferences($references, $manager, $executed);
+        $this->restoreReferences($references, $manager, $executed, $io);
         foreach ($plan as $class) {
             $fixture = $fixtures[$class];
             assert($fixture instanceof RevertibleFixtureInterface);
