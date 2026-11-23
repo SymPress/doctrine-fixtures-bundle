@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SymPress\DoctrineFixturesBundle\Command;
 
+use Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\ReferenceRepository;
@@ -116,16 +117,32 @@ final class DownCommand extends AbstractFixturesCommand
         }
 
         if ($this->groups($input) !== []) {
-            return array_values(array_intersect(array_keys($executed), array_map(
-                static fn (FixtureInterface $fixture): string => $fixture::class,
-                $this->loader->getFixtures($this->groups($input)),
-            )));
+            return array_values(array_intersect(array_keys($executed), $this->groupMembers($this->groups($input))));
         }
 
         $batches = array_map(static fn (ExecutedFixture $run): int => $run->getBatch(), $executed);
         $last = $batches === [] ? 0 : max($batches);
 
         return array_keys(array_filter($batches, static fn (int $batch): bool => $batch === $last));
+    }
+
+    /**
+     * getFixtures($groups) also returns the groups' dependencies, which down must keep. Only the upstream loader
+     * knows every group (class name, getGroups() and the service tag's "group"), so read its private mapping.
+     *
+     * @param list<string> $groups
+     * @return list<string>
+     */
+    private function groupMembers(array $groups): array
+    {
+        /** @var array<string, array<string, bool>> $mapping */
+        $mapping = \Closure::bind(
+            fn (): array => $this->groupsFixtureMapping,
+            $this->loader,
+            SymfonyFixturesLoader::class,
+        )();
+
+        return array_keys(array_merge(...array_map(static fn (string $group): array => $mapping[$group] ?? [], $groups)));
     }
 
     /**

@@ -41,6 +41,17 @@ final class FixturesDownTest extends KernelTestCase
         self::assertStringContainsString('Executed 2 fixture(s)', $display);
     }
 
+    public function testDownWithAGroupKeepsTheGroupsDependencies(): void
+    {
+        $this->boot();
+        $this->command('doctrine:fixtures:up', ['--group' => ['BundleFixtures']]);
+
+        $display = $this->command('doctrine:fixtures:down', ['--group' => ['BundleFixtures']])->getDisplay();
+        self::assertStringContainsString('Reverted 1 fixture(s).', $display);
+        self::assertSame([ProductFixtures::class], array_keys($this->storage()->executed()));
+        self::assertSame(['Base product'], $this->names());
+    }
+
     public function testIrreversibleFixtureBlocksTheWholeRun(): void
     {
         $this->boot();
