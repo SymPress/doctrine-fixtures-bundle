@@ -53,6 +53,28 @@ final class FixturesUpTest extends KernelTestCase
         self::assertSame('Base product', $bundle?->getBundledWith()?->getName());
     }
 
+    public function testStaleReferencesAreSkippedWithAWarning(): void
+    {
+        $this->boot();
+        $this->command('doctrine:fixtures:up', ['--group' => ['catalog']]);
+        // A removed entity class and a missing identity, e.g. left behind by a refactoring.
+        $this->manager()->getConnection()->insert(FixtureVersionStorage::TABLE, [
+            'fixture'            => 'App\\DataFixtures\\RemovedFixtures',
+            'batch'              => 1,
+            'executed_at'        => '2026-01-01 00:00:00',
+            'fixture_references' => json_encode([
+                'removed.class'    => ['class' => 'App\\Entity\\Removed', 'identity' => ['id' => 1]],
+                'removed.identity' => ['class' => Product::class, 'identity' => null],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+
+        $tester = $this->command('doctrine:fixtures:up');
+        self::assertSame(0, $tester->getStatusCode());
+        $display = (string) preg_replace('~\s+~', ' ', $tester->getDisplay());
+        self::assertStringContainsString('Skipped stale references: removed.class, removed.identity', $display);
+        self::assertStringContainsString('Executed 2 fixture(s) in batch 2.', $display);
+    }
+
     public function testFailingFixtureIsRolledBackAndStaysPending(): void
     {
         $this->boot();
