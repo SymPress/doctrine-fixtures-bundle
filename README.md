@@ -85,7 +85,8 @@ wp console doctrine:fixtures:down --all
 - `down` reverts the last batch, the given fixtures or `--all`. Executed fixtures
   that depend on a reverted fixture are reverted first. It asks for confirmation;
   `--no-interaction` proceeds like `doctrine:migrations:migrate -n`.
-- All commands accept `--group` and `--em`.
+- All commands accept `--group` and `--em`. `down --group` reverts the group's
+  own fixtures (and their dependents), never the fixtures they depend on.
 
 A fixture becomes revertible by implementing `RevertibleFixtureInterface`:
 
