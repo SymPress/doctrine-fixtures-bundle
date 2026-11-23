@@ -10,7 +10,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 return static function (ContainerConfigurator $container): void {
     $container->extension('framework', ['secret' => 'fixtures-test-secret-for-disposable-tests-only']);
     $container->extension('doctrine', [
-        'dbal' => ['url' => '%env(DOCTRINE_FIXTURES_TEST_URL)%', 'schema_filter' => '~^fixture_~'],
+        'dbal' => ['url' => '%env(DOCTRINE_FIXTURES_TEST_URL)%'],
         'orm' => ['mappings' => ['Fixture' => [
             'type' => 'attribute', 'is_bundle' => false,
             'dir' => dirname((string) (new ReflectionClass(Product::class))->getFileName()),

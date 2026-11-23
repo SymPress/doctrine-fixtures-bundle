@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "621a695c3b2cdf2b4a7e8dee4a6d24d5",
+    "content-hash": "e7cbbf0f9b9c66fd3763bda1eb2eaf4e",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -4283,16 +4283,16 @@
         },
         {
             "name": "sympress/doctrine-bundle",
-            "version": "v1.0.5",
+            "version": "v1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SymPress/doctrine-bundle.git",
-                "reference": "588f3e92d260cfee4d084d82044dafe99793776a"
+                "reference": "1b620568456c43db92a1a453e889ca8a8fe947d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SymPress/doctrine-bundle/zipball/588f3e92d260cfee4d084d82044dafe99793776a",
-                "reference": "588f3e92d260cfee4d084d82044dafe99793776a",
+                "url": "https://api.github.com/repos/SymPress/doctrine-bundle/zipball/1b620568456c43db92a1a453e889ca8a8fe947d7",
+                "reference": "1b620568456c43db92a1a453e889ca8a8fe947d7",
                 "shasum": ""
             },
             "require": {
@@ -4353,10 +4353,10 @@
             "description": "Native Doctrine ORM, DBAL and Symfony Doctrine bridge integration for SymPress.",
             "support": {
                 "issues": "https://github.com/SymPress/doctrine-bundle/issues",
-                "source": "https://github.com/SymPress/doctrine-bundle/tree/v1.0.5"
+                "source": "https://github.com/SymPress/doctrine-bundle/tree/v1.0.7"
             },
-            "time": "2026-11-15T19:09:20+00:00",
-            "published-time": "2026-11-15T19:10:45+00:00"
+            "time": "2026-11-23T03:37:13+00:00",
+            "published-time": "2026-11-23T03:37:22+00:00"
         },
         {
             "name": "sympress/framework-bundle",

@@ -3,7 +3,7 @@
 Doctrine data fixtures for the SymPress ecosystem. Uses the original
 [DoctrineFixturesBundle](https://symfony.com/bundles/DoctrineFixturesBundle/current/index.html)
 on top of [`sympress/doctrine-bundle`](https://github.com/SymPress/doctrine-bundle).
-Requires PHP 8.5 and `sympress/doctrine-bundle` >= 1.0.3.
+Requires PHP 8.5 and `sympress/doctrine-bundle` >= 1.0.7.
 
 ## Installation
 
@@ -59,8 +59,9 @@ wp console doctrine:fixtures:load --group=catalog --append
 
 Without `--append` the command purges every table mapped by Doctrine before
 loading. Tables that Doctrine does not map, such as WordPress core and plugin
-tables, are not touched. Use `--purge-exclusions` to keep individual mapped
-tables.
+tables, are not touched. Tables with the WordPress table prefix are never purged
+either, even when an entity maps them (quoted or not); outside WordPress, set
+`DB_TABLE_PREFIX`. Use `--purge-exclusions` to keep individual mapped tables.
 
 ## Migration-style fixtures: up, down and status
 
