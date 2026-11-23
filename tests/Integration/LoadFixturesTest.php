@@ -25,6 +25,21 @@ final class LoadFixturesTest extends KernelTestCase
         self::assertSame('WordPress content', $connection->fetchOne('SELECT title FROM wp_posts WHERE id = 1'));
     }
 
+    public function testLoadKeepsMappedWordPressTablesWithAQuotedName(): void
+    {
+        $this->boot();
+        $connection = $this->manager()->getConnection();
+        // Older doctrine-bundle versions let SchemaTool create the mapped table during boot.
+        $connection->executeStatement(
+            'CREATE TABLE IF NOT EXISTS wp_users (ID INT NOT NULL PRIMARY KEY, user_login VARCHAR(60) NOT NULL)',
+        );
+        $connection->executeStatement("INSERT INTO wp_users VALUES (1, 'admin')");
+
+        self::assertSame(0, $this->command('doctrine:fixtures:load')->getStatusCode());
+
+        self::assertSame('admin', $connection->fetchOne('SELECT user_login FROM wp_users WHERE ID = 1'));
+    }
+
     public function testAppendAndGroupsUseNativeOptions(): void
     {
         $this->boot();
